@@ -2,13 +2,11 @@ from espn_api.football import League
 from yfpy.query import YahooFantasySportsQuery
 from sleeper_wrapper import League as SleeperLeague
 from utils import espn_helper, yahoo_helper, sleeper_helper, helper
-# from openai import OpenAI
-from openai import OpenAI
 import datetime
-import os
 import streamlit as st
 from streamlit.logger import get_logger
 LOGGER = get_logger(__name__)
+
 
 def moderate_text(client, text):
     try:
@@ -17,23 +15,26 @@ def moderate_text(client, text):
             input=text,
             model="text-moderation-latest"  # Use the latest moderation model
         )
-        
+
         # Extract the first result
         result = response['results'][0]
-        
+
         # Check if the content is flagged
         if result['flagged']:
             # Log the flagged categories
-            flagged_categories = [category for category, flagged in result['categories'].items() if flagged]
-            print(f"Moderation flagged the following categories: {', '.join(flagged_categories)}")
+            flagged_categories = [category for category,
+                                  flagged in result['categories'].items() if flagged]
+            print(
+                f"Moderation flagged the following categories: {', '.join(flagged_categories)}")
             return False  # Return False if any category is flagged
         return True  # Content is not flagged, return True
-        
+
     except Exception as e:
         print(f"An error occurred: {str(e)}")
         return False  # Assume text is inappropriate in case of an error
 
 # Lateny troubleshooting: https://platform.openai.com/docs/guides/production-best-practices/improving-latencies
+
 
 def generate_gpt4_summary_streaming(client, summary, character_choice, trash_talk_level):
     # Construct the instruction for GPT-4 based on user inputs
@@ -56,7 +57,7 @@ def generate_gpt4_summary_streaming(client, summary, character_choice, trash_tal
             max_tokens=1600,  # Control response length
             stream=True
         )
-        
+
         # Extract and yield the GPT-4 generated message
         for chunk in response:
             # Access 'content' directly since 'delta' is an object, not a dictionary
@@ -67,65 +68,79 @@ def generate_gpt4_summary_streaming(client, summary, character_choice, trash_tal
         yield f"Error details: {e}"
 
 # @st.cache_data(ttl=3600) - Cannot hash argument 'league'
+
+
 def generate_espn_summary(league, cw):
     """
     Generate a human-friendly summary based on the league stats.
-    
+
     Args:
     - league (League): The league object.
-    
+
     Returns:
     - str: A human-friendly summary.
     """
     # Extracting required data using helper functions
     start_time = datetime.datetime.now()
     top_teams = espn_helper.top_three_teams(league)
-    print(f"Time for top_three_teams: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
-    
+    print(
+        f"Time for top_three_teams: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
+
     start_time = datetime.datetime.now()
     top_scorer_week = espn_helper.top_scorer_of_week(league, cw)
-    print(f"Time for top_scorer_of_week: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
-    
+    print(
+        f"Time for top_scorer_of_week: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
+
     start_time = datetime.datetime.now()
     worst_scorer_week = espn_helper.worst_scorer_of_week(league, cw)
-    print(f"Time for worst_scorer_of_week: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
-    
+    print(
+        f"Time for worst_scorer_of_week: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
+
     start_time = datetime.datetime.now()
     top_scorer_szn = espn_helper.top_scorer_of_season(league)
-    print(f"Time for top_scorer_of_season: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
-    
+    print(
+        f"Time for top_scorer_of_season: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
+
     start_time = datetime.datetime.now()
     worst_scorer_szn = espn_helper.worst_scorer_of_season(league)
-    print(f"Time for worst_scorer_of_season: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
-    
+    print(
+        f"Time for worst_scorer_of_season: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
+
     start_time = datetime.datetime.now()
     most_trans = espn_helper.team_with_most_transactions(league)
-    print(f"Time for team_with_most_transactions: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
-    
+    print(
+        f"Time for team_with_most_transactions: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
+
     start_time = datetime.datetime.now()
     most_injured = espn_helper.team_with_most_injured_players(league)
-    print(f"Time for team_with_most_injured_players: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
-    
+    print(
+        f"Time for team_with_most_injured_players: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
+
     start_time = datetime.datetime.now()
     highest_bench = espn_helper.highest_scoring_benched_player(league, cw)
-    print(f"Time for highest_scoring_benched_player: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
-    
+    print(
+        f"Time for highest_scoring_benched_player: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
+
     start_time = datetime.datetime.now()
     lowest_start = espn_helper.lowest_scoring_starting_player(league, cw)
-    print(f"Time for lowest_scoring_starting_player: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
-    
+    print(
+        f"Time for lowest_scoring_starting_player: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
+
     start_time = datetime.datetime.now()
     biggest_blowout = espn_helper.biggest_blowout_match(league, cw)
-    print(f"Time for biggest_blowout_match: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
-    
+    print(
+        f"Time for biggest_blowout_match: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
+
     start_time = datetime.datetime.now()
     closest_game = espn_helper.closest_game_match(league, cw)
-    print(f"Time for closest_game_match: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
-    
+    print(
+        f"Time for closest_game_match: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
+
     start_time = datetime.datetime.now()
     top_scoring_team_Week = espn_helper.highest_scoring_team(league, cw)
-    print(f"Time for top_scoring_team_string: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
-    
+    print(
+        f"Time for top_scoring_team_string: {(datetime.datetime.now() - start_time).total_seconds()} seconds")
+
     # Formatting the summary
     summary = f"""
     - Top scoring fantasy team this week: {top_scoring_team_Week} 
@@ -141,24 +156,27 @@ def generate_espn_summary(league, cw):
     - Biggest blowout match of the week: {espn_helper.clean_team_name(biggest_blowout.home_team.team_name)} ({biggest_blowout.home_score} points) vs {espn_helper.clean_team_name(biggest_blowout.away_team.team_name)} ({biggest_blowout.away_score} points)
     - Closest game of the week: {espn_helper.clean_team_name(closest_game.home_team.team_name)} ({closest_game.home_score} points) vs {espn_helper.clean_team_name(closest_game.away_team.team_name)} ({closest_game.away_score} points)
     """
-    
+
     return summary.strip()
+
 
 @st.cache_data(ttl=3600)
 def get_espn_league_summary(league_id, espn2, SWID):
-    # Fetch data from ESPN Fantasy API and compute statistics   
-    start_time_league_connect = datetime.datetime.now() 
+    # Fetch data from ESPN Fantasy API and compute statistics
+    start_time_league_connect = datetime.datetime.now()
     league_id = league_id
     year = 2024
     espn_s2 = espn2
     swid = SWID
     # Initialize league & current week
     try:
-        league = League(league_id=league_id, year=year, espn_s2=espn_s2, swid=swid)
+        league = League(league_id=league_id, year=year,
+                        espn_s2=espn_s2, swid=swid)
     except Exception as e:
         return str(e), "Error occurred during validation"
     end_time_league_connect = datetime.datetime.now()
-    league_connect_duration = (end_time_league_connect - start_time_league_connect).total_seconds()
+    league_connect_duration = (
+        end_time_league_connect - start_time_league_connect).total_seconds()
     cw = league.current_week-1
     # Generate summary
     start_time_summary = datetime.datetime.now()
@@ -166,11 +184,14 @@ def get_espn_league_summary(league_id, espn2, SWID):
     end_time_summary = datetime.datetime.now()
     summary_duration = (end_time_summary - start_time_summary).total_seconds()
     # Generage debugging information, placeholder for now
-    debug_info = "Summary: " + summary + " ~~~Timings~~~ " + f"League Connect Duration: {league_connect_duration} seconds " + f"Summary Duration: {summary_duration} seconds "
+    debug_info = "Summary: " + summary + " ~~~Timings~~~ " + \
+        f"League Connect Duration: {league_connect_duration} seconds " + \
+        f"Summary Duration: {summary_duration} seconds "
     return summary, debug_info
 
+
 @st.cache_data(ttl=3600)
-def get_yahoo_league_summary(league_id, auth_path):    
+def get_yahoo_league_summary(league_id, auth_path):
     league_id = league_id
     LOGGER.info(f"League id: {league_id}")
     auth_directory = auth_path
@@ -190,7 +211,8 @@ def generate_sleeper_summary(league_id):
     # Initialize the Sleeper API League object
     league = SleeperLeague(league_id)
     current_date_today = datetime.datetime.now()
-    week = helper.get_current_week(current_date_today)-1 #force to always be most recent completed week
+    # force to always be most recent completed week
+    week = helper.get_current_week(current_date_today)-1
     # Get necessary data from the league
     rosters = league.get_rosters()
     users = league.get_users()
@@ -204,37 +226,44 @@ def generate_sleeper_summary(league_id):
     # Generate mappings
     user_team_mapping = league.map_users_to_team_name(users)
     roster_owner_mapping = league.map_rosterid_to_ownerid(rosters)
-    
+
     # Generate scoreboards for the week
-    scoreboards = sleeper_helper.calculate_scoreboards(matchups, user_team_mapping, roster_owner_mapping)
+    scoreboards = sleeper_helper.calculate_scoreboards(
+        matchups, user_team_mapping, roster_owner_mapping)
 
     # 1. Highest Scoring Team of the Week
-    highest_scoring_team_name, highest_scoring_team_score = sleeper_helper.highest_scoring_team_of_week(scoreboards)
+    highest_scoring_team_name, highest_scoring_team_score = sleeper_helper.highest_scoring_team_of_week(
+        scoreboards)
 
     # 2. Standings; Top 3 Teams
     top_3_teams_result = sleeper_helper.top_3_teams(standings)
-    
+
     # 3. Highest Scoring Player of the Week
-    highest_scoring_player_week, weekly_score, highest_scoring_player_team_week = sleeper_helper.highest_scoring_player_of_week(matchups, players_data, user_team_mapping, roster_owner_mapping)
+    highest_scoring_player_week, weekly_score, highest_scoring_player_team_week = sleeper_helper.highest_scoring_player_of_week(
+        matchups, players_data, user_team_mapping, roster_owner_mapping)
 
     # 4. Lowest Scoring Player of the Week that Started
-    lowest_scoring_starter, lowest_starter_score, lowest_scoring_starter_team = sleeper_helper.lowest_scoring_starter_of_week(matchups, players_data, user_team_mapping, roster_owner_mapping)
+    lowest_scoring_starter, lowest_starter_score, lowest_scoring_starter_team = sleeper_helper.lowest_scoring_starter_of_week(
+        matchups, players_data, user_team_mapping, roster_owner_mapping)
 
     # 5. Highest Scoring Benched Player of the Week
-    highest_scoring_benched_player, highest_benched_score, highest_scoring_benched_player_team = sleeper_helper.highest_scoring_benched_player_of_week(matchups, players_data, user_team_mapping, roster_owner_mapping)
+    highest_scoring_benched_player, highest_benched_score, highest_scoring_benched_player_team = sleeper_helper.highest_scoring_benched_player_of_week(
+        matchups, players_data, user_team_mapping, roster_owner_mapping)
 
     # 6. Biggest Blowout Match of the Week
-    blowout_teams, point_differential_blowout = sleeper_helper.biggest_blowout_match_of_week(scoreboards)
+    blowout_teams, point_differential_blowout = sleeper_helper.biggest_blowout_match_of_week(
+        scoreboards)
 
     # 7. Closest Match of the Week
-    close_teams, point_differential_close = sleeper_helper.closest_match_of_week(scoreboards)
+    close_teams, point_differential_close = sleeper_helper.closest_match_of_week(
+        scoreboards)
 
     # 8. Team with Most Moves (this always seems to be zero, UPDATE)
     # team_most_moves, most_moves = sleeper_helper.team_with_most_moves(rosters, user_team_mapping, roster_owner_mapping)
-    
+
     # 9. Team on Hottest Streak
-    hottest_streak_team, longest_streak = sleeper_helper.team_on_hottest_streak(rosters, user_team_mapping, roster_owner_mapping)
-    
+    hottest_streak_team, longest_streak = sleeper_helper.team_on_hottest_streak(
+        rosters, user_team_mapping, roster_owner_mapping)
 
     # Construct the summary string
     summary = (
